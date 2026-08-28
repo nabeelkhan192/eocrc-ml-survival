@@ -1,0 +1,17 @@
+# ==== SEER DUA COMPLIANCE: never commit case-level data ====
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+# synthetic data is fake and shareable, but regenerable; keep repo light
+data/synthetic/*.csv
+# generated outputs
+results/
+figures/
+# python
+__pycache__/
+*.pyc
+.venv/
+*.joblib
+.DS_Store
+.ipynb_checkpoints/
