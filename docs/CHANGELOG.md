@@ -1,3 +1,45 @@
+# Changelog
+
+## v4.1.1 — Aug 28, 2026 (provenance-correction pass; no methodological changes)
+
+### Disclosure accuracy
+- Replaced the over-broad sentence "No real SEER patient-level outcome
+  data have been accessed or analyzed during protocol development or
+  repository testing" (README and protocol S10) with the accurate
+  narrower disclosure: on Aug 19, 2026 the authorized SEER export was
+  accessed solely for outcome-blind schema and cohort-construction
+  validation (Stage 01); no follow-up distribution, event distribution,
+  model fitting, predictions, or performance metrics were inspected
+  before preregistration.
+- Status wording corrected repository-wide from "preregistered" to
+  "final preregistration candidate; OSF registration pending". The OSF
+  DOI, date, and URL will be added to README after actual registration
+  (the frozen registered artifact itself is never retroactively edited).
+
+### Real-data execution gate
+- run_all.sh: with a real export present, now runs ONLY Stages 01-02 and
+  stops at a conspicuous PRE-MODEL GATE (adequacy rule + EPP check +
+  CHANGELOG recording), fitting no model. Synthetic mode still runs the
+  full pipeline end-to-end.
+- run_models.sh (new): Stages 03-07; in real mode refuses to run without
+  the explicit --horizon-locked flag.
+
+### Protocol-code concordance
+- Protocol S7 transport wording now names the implemented transported
+  set exactly: cox_full, xgb_cox, xgb_h (AO-fitted preprocessing frozen);
+  cox_stage and RSF are within-group comparators only and are not
+  transported.
+- Protocol S9 clarified: cancer-specific event counts were not inspected
+  pre-registration; EPP is evaluated at the Stage-02 gate, with the
+  deterministic priority-order fallback (stage, nodes, histology, grade,
+  size, age) retained unchanged.
+
+### Post-registration decision log (to be completed at the Stage-02 gate)
+- HORIZON DECISION: [date] — share_of_event_free_with_followup_lt_horizon
+  (EO test) = [ ], (AO test) = [ ]; rule fired: [yes/no]; primary horizon
+  locked at [60/36] months. EPP (EO train) = [ ]; fallback applied:
+  [no / retained-feature list].
+
 # CHANGELOG
 
 Per protocol §13, every deviation or revision is recorded here with date

@@ -5,8 +5,9 @@ average-onset patients transport to early-onset patients — and can
 recalibration repair them?**
 
 Principal investigator: **Nabeel Ahmad Khan** (first & corresponding author)
-Status: protocol preregistered (see `docs/protocol_OSF_preregistration.md`);
-analysis code under development. Preprint: *forthcoming (medRxiv)*.
+Status: final preregistration candidate (see
+`docs/protocol_OSF_preregistration.md`); OSF registration pending — the
+registration DOI, date, and URL will be added here upon registration. Preprint: *forthcoming (medRxiv)*.
 
 ---
 
@@ -25,13 +26,20 @@ criteria, and tests whether simple recalibration repairs it.
 That frozen-model **age-group transportability** question is this study's
 primary objective; interpretable EO-CRC model development and an EO-vs-AO
 SHAP contrast are secondary. Full rationale, hypotheses, and analysis plan are
-preregistered in `docs/protocol_OSF_preregistration.md`.
+prespecified in `docs/protocol_OSF_preregistration.md` (OSF registration
+pending).
 
-**No real SEER patient-level outcome data have been accessed or analyzed
-during protocol development or repository testing.** All runs so far are
-synthetic pipeline tests (unit tests, debugging, execution and null/sanity
-checks); synthetic outputs are watermarked and never presented as
-findings.
+**Pre-registration real-data access disclosure.** Real SEER data were
+accessed before preregistration only for outcome-blind schema and
+cohort-construction validation (Stage 01: header mapping, label
+vocabularies, inclusion/exclusion logic, aggregate cohort counts). No
+follow-up distribution, outcome/event distribution, model fitting,
+predictions, or performance metrics were inspected before
+preregistration. See the protocol (§10 and the v4.1 data-access
+disclosure) and `docs/CHANGELOG.md` for the full record. All other runs
+are synthetic pipeline tests (unit tests, debugging, execution and
+null/sanity checks); synthetic outputs are watermarked and never
+presented as findings.
 
 ## Quickstart (no SEER data needed)
 
@@ -65,23 +73,43 @@ advice; not for clinical decision-making. See `app/app.py` header.
 ```bash
 python -m pytest tests -q
 ```
-22 deterministic tests on toy data: train-only preprocessing, frozen
+23 deterministic tests on toy data: train-only preprocessing, frozen
 AO->EO transport, paired-bootstrap alignment, adequacy denominator,
 horizon boundary, grade/site/surgery mapping, XGB full-cohort refit,
 paired delta time-dependent AUC.
 
 ## Using real SEER data
 
-Follow `data/README.md` exactly: request the (free) SEER Research Data tier,
-build the documented SEER*Stat case listing, export with labels to
-`data/raw/seer_crc_export.csv`, update `COLUMN_MAP` in `src/config.py`, and
-rerun `bash run_all.sh`. **Never commit case-level SEER data** — the DUA
-prohibits redistribution and the `.gitignore` enforces this.
+Follow `data/README.md` exactly: request the (free) SEER Research Data
+tier, build the documented SEER*Stat case listing, export with labels to
+`data/raw/seer_crc_export.csv`, and update `COLUMN_MAP` in
+`src/config.py`. **Never commit case-level SEER data** — the DUA prohibits
+redistribution and the `.gitignore` enforces this.
+
+Real-data execution is gated to match the prespecified workflow:
+
+1. `bash run_all.sh` — with a real export present this runs **only**
+   Stage 01 (cohort construction) and Stage 02 (descriptives +
+   follow-up-adequacy table), then stops. No model is fitted.
+2. Review `results/seer/followup_adequacy.csv` and apply the
+   prespecified rule: if `share_of_event_free_with_followup_lt_horizon`
+   > 0.50 in either the EO or AO temporal-test group at 60 months, the
+   primary horizon becomes 36 months; otherwise 60 months is retained.
+   Evaluate EO-training events per parameter (EPP) from the Stage-02
+   descriptives and apply the §9 fallback if EPP < 20.
+3. Record the horizon decision (and any EPP fallback) in
+   `docs/CHANGELOG.md`, and set `HORIZON_MONTHS` in `src/config.py` if
+   the 36-month trigger fired.
+4. `bash run_models.sh --horizon-locked` — runs Stages 03–07 (models,
+   evaluation, SHAP, decision curves, recalibration).
+
+Synthetic mode (no real export present) is unaffected and runs the full
+pipeline end-to-end via `bash run_all.sh`.
 
 ## Repository map
 
 ```
-docs/     preregistered protocol, reporting-checklist instructions
+docs/     preregistration protocol, reporting-checklist instructions
 data/     SEER regeneration recipe (no case-level data is ever stored here)
 src/      numbered pipeline: 00 synthetic → 01 cohort → 02 descriptives
           (incl. the follow-up adequacy rule) → 03 models → 04 evaluation

@@ -39,5 +39,5 @@ repository claims they have already run.
 | Integrated Brier score | — | NOT prespecified (removed v4.0; documented) |
 | Sensitivity analyses (2)-(6): complete-case, rectal-excluded, 2019-excluded, COVID extension, stage I-III subgroup | §8 | *real-data stage*: documented cohort-filter re-runs of 01->07 |
 | Research-use demonstration app (frozen models only; mode banner) | §11 | app/app.py; smoke-tested via streamlit AppTest |
-| Unit tests for all v4 fixes | §7.0, §5, §6 | tests/ (22 tests, pytest) |
+| Unit tests for all v4 fixes | §7.0, §5, §6 | tests/ (23 tests, pytest) |
 | TRIPOD+AI / STROBE checklists | §10 | docs/reporting_checklists.md (complete at manuscript stage) |

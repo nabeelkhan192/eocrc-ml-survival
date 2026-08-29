@@ -7,11 +7,12 @@ validated U.S. SEER study
 **Principal investigator / first & corresponding author:** Nabeel Ahmad
 Khan, Pharm.D., M.S. (Biomedical Sciences — Pharmacology, University of
 Alabama at Birmingham)
-**Collaborators:** [to be added if applicable — roles per ICMJE criteria]
-**Version:** 4.1 — [insert date of OSF registration]
+**Version:** 4.1.1 — final preregistration candidate (August 28, 2026; OSF registration pending)
 **Registration type:** OSF open-ended preregistration
 **Funding:** None. **Conflicts of interest:** None declared.
-**Code repository:** [insert GitHub URL] (public at preprint posting)
+**Code repository:** https://github.com/nabeelkhan192/eocrc-ml-survival
+(public; registered snapshot: annotated tag `v4.1.1-osf` — the exact commit
+SHA is recorded in the OSF registration form)
 
 **Version history.** v1.0 (Aug 12, 2026): initial draft. v2.0 (Aug 12,
 2026): title and objective structure revised following a pre-registration
@@ -40,6 +41,21 @@ follow-up structure, outcome distribution, model, or performance metric
 was inspected before registration; the mapping corrections this
 surfaced (v4.1) are listed in the CHANGELOG. Synthetic results are never
 presented as findings.
+**v4.1.1 (Aug 28, 2026): provenance-correction pass (no methodological
+changes).** (1) The pre-registration real-data disclosure was harmonized
+across the protocol (§10) and README — an earlier, over-broad sentence
+("no real SEER patient-level outcome data have been accessed") was
+replaced by the accurate narrower claim below. (2) A real-data execution
+gate was added: on real SEER data `run_all.sh` now stops after Stage 02 so
+the prespecified follow-up-adequacy rule is applied and the primary
+horizon locked before any model is fitted (`run_models.sh` runs Stages
+03–07 afterward). (3) §7 transport wording was matched to the implemented
+code: the models transported AO→EO are `cox_full`, `xgb_cox`, and `xgb_h`;
+the stage-only Cox baseline and RSF are not transported. (4) Status
+wording corrected from "registered/preregistered" to "preregistration
+candidate" pending actual OSF registration. Environment lock file
+(`requirements-lock.txt`, Python 3.11.9) included in the registered
+snapshot.
 
 ---
 
@@ -328,8 +344,12 @@ reported separately and is not interchangeable with CITL.** Bootstrap:
 seeded, B = 200 iterations, percentile 95% CIs.
 
 **Transportability protocol (primary analysis).**
-1. Freeze each AO-trained model, including its AO-fitted preprocessing
-   (no re-estimation of any parameter).
+1. For each model prespecified for AO→EO transport — the full-covariate
+   Cox (`cox_full`), the XGB-Cox risk score (`xgb_cox`), and the
+   fixed-horizon XGBoost classifier (`xgb_h`) — freeze the AO-trained
+   model, including its AO-fitted preprocessing (no re-estimation of any
+   parameter). The stage-only Cox baseline (`cox_stage`) and RSF are
+   fitted as within-group comparators only and are not transported.
 2. Apply it to the identical EO temporal-test patients used to evaluate
    the EO-trained comparator (patient alignment asserted in code).
 3. Report **paired** differences (EO-trained minus AO-trained on the same
@@ -387,10 +407,13 @@ outcome-blind cohort construction of Aug 19, 2026 (see data-access
 disclosure) yielded 216,975 eligible patients: EO 20,781 train / 9,551
 test; AO 130,728 train / 55,915 test (final STROBE flow diagram at
 analysis);
-if EO training events per candidate parameter fall below 20, the feature
-set will be reduced by prespecified clinical priority (stage, nodes,
-histology, grade, size, age first), following prediction-model sample-size
-guidance [10].
+cancer-specific event counts were not inspected before registration, so
+events-per-parameter (EPP) is evaluated after registration, at the
+Stage-02 gate, from the Stage-02 descriptives. If EO training events per
+candidate parameter fall below 20, the feature set is reduced
+deterministically by the prespecified clinical priority order — stage,
+nodes, histology, grade, size, age — retaining features in that order
+until EPP ≥ 20, following prediction-model sample-size guidance [10].
 
 ## 10. Reporting, ethics, and data governance
 
@@ -411,8 +434,22 @@ case-level data are regenerable by any SEER-credentialed researcher via
 the documented SEER*Stat session (data/README.md). Repository outputs are
 strictly separated by mode (`results/synthetic/` vs `results/seer/`);
 synthetic-mode figures are watermarked and support no scientific
-conclusion. **No real SEER patient-level outcome data have been accessed
-or analyzed during protocol development or repository testing.** Synthetic
+conclusion. **Pre-registration real-data access disclosure.** On August 19, 2026,
+after the principal study design and analysis plan had been developed
+using synthetic data, the authorized SEER case-level export was accessed
+solely for outcome-blind schema and cohort-construction validation
+(Stage 01 only): source-header mapping, label-vocabulary inspection,
+verification of inclusion/exclusion logic, coding-era compatibility, and
+aggregate cohort counts. No follow-up distribution, cancer-specific event
+distribution, other outcome distribution, model fitting, model
+predictions, discrimination or calibration metrics, SHAP results,
+hypothesis-test results, or other model-performance results were
+inspected before preregistration; coding and schema corrections from this
+validation are documented in the CHANGELOG. Stage 02 (run after
+registration) inspects only the limited follow-up/event-support
+information required by the prespecified adequacy rule; no
+model-performance or hypothesis-result information is examined before the
+primary horizon is locked. Synthetic
 data are used only for unit tests, pipeline testing, debugging, execution
 checks and null/sanity checks, and are never presented as findings.
 
