@@ -12,7 +12,9 @@
 3. **SEER acknowledgment** — include the required data acknowledgment text
    from your signed DUA in the manuscript's Acknowledgments section, and cite
    the exact database submission used (e.g., "SEER Research Data, 17 Registries,
-   November 2024 Submission (2000-2022)").
+   Nov 2025 Sub (2000-2023)"). Cite the exact SEER database submission
+   recorded in the protocol (S3) and CHANGELOG — for this study: SEER
+   Research Data, 17 Registries, Nov 2025 Sub (2000-2023).
 
 Do not paste the checklists into this repo; keep completed copies in docs/
 locally and submit with the manuscript.

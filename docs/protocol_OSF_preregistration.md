@@ -1,4 +1,4 @@
-# Study Protocol & Analysis Plan (for OSF Preregistration) — Version 4.1
+# Study Protocol & Analysis Plan (for OSF Preregistration) — Version 4.1.1
 
 **Title:** Age-group transportability of explainable machine-learning models
 for cancer-specific survival in early-onset colorectal cancer: a temporally
@@ -11,7 +11,7 @@ Alabama at Birmingham)
 **Registration type:** OSF open-ended preregistration
 **Funding:** None. **Conflicts of interest:** None declared.
 **Code repository:** https://github.com/nabeelkhan192/eocrc-ml-survival
-(public; registered snapshot: annotated tag `v4.1.1-osf` — the exact commit
+(public; frozen OSF snapshot: annotated tag `v4.1.1-osf` — the exact commit
 SHA is recorded in the OSF registration form)
 
 **Version history.** v1.0 (Aug 12, 2026): initial draft. v2.0 (Aug 12,
@@ -54,8 +54,15 @@ code: the models transported AO→EO are `cox_full`, `xgb_cox`, and `xgb_h`;
 the stage-only Cox baseline and RSF are not transported. (4) Status
 wording corrected from "registered/preregistered" to "preregistration
 candidate" pending actual OSF registration. Environment lock file
-(`requirements-lock.txt`, Python 3.11.9) included in the registered
-snapshot.
+(`requirements-lock.txt`, Python 3.11.9) included in the frozen snapshot.
+(5) CHANGELOG header corrected and historical v4.0/v3.0 headings restored.
+(6) H2 wording tightened: recalibration preserves ranking under
+intercept-only and positive-slope updates (a slope <= 0 is reported, not
+treated as success). (7) Descriptive OS Kaplan-Meier (S2) implemented in
+stage 02. (8) Literature notes updated: Zhao journal version (Artif Intell
+Med 2026;178:103426, PMID 42019107) replaces the arXiv-only entry; the
+duplicate Korean-XAI entry retired against verified PMID 41066920.
+(9) Reporting-checklist database example corrected to Nov 2025 Sub.
 
 ---
 
@@ -126,11 +133,15 @@ degradation.
   the prespecified criteria in §7.
 - **H2 (recalibration).** Recalibration of AO-trained models using EO
   training-window data only (§7 step 5) restores calibration to within the
-  prespecified adequacy range in the EO test window. Because the
-  intercept/slope updates are monotone transformations, rank-based
-  discrimination is unchanged by construction; any discrimination gap
-  therefore persists and would require refitting — itself a reportable,
-  decision-relevant finding.
+  prespecified adequacy range in the EO test window. Recalibration is
+  intended to correct calibration rather than discrimination:
+  intercept-only updates preserve ranking, and positive-slope
+  recalibration preserves ranking; therefore any substantive
+  discrimination deficit generally requires model refitting rather than
+  calibration adjustment — itself a reportable, decision-relevant
+  finding. (A fitted slope <= 0 would not preserve ranking; should this
+  occur it will be reported explicitly rather than treated as a
+  calibration success.)
 
 **Secondary objective — EO-CRC model development.**
 - **H3.** In EO-CRC under temporal validation, each survival model

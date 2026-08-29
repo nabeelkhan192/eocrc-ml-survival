@@ -150,14 +150,36 @@ def km_plot(df: pd.DataFrame) -> None:
     plt.close(fig)
 
 
+def os_plot(df: pd.DataFrame) -> None:
+    """Descriptive overall-survival KM (protocol S2: OS is descriptive only;
+    no OS model is prespecified)."""
+    fig, ax = plt.subplots(figsize=(7, 5))
+    kmf = KaplanMeierFitter()
+    for g, color in [("EO", "#c0392b"), ("AO", "#2c3e50")]:
+        sub = df[df.eo_group == g]
+        kmf.fit(sub.survival_months, sub.os_event,
+                label=f"{g} (n={len(sub):,})")
+        kmf.plot_survival_function(ax=ax, ci_show=True, color=color)
+    ax.set_xlabel("Months since diagnosis")
+    ax.set_ylabel("Overall survival probability")
+    ax.set_title("Overall survival (descriptive): early-onset vs average-onset CRC")
+    ax.set_ylim(0, 1.02)
+    ax.grid(alpha=.25)
+    watermark(fig)
+    fig.tight_layout()
+    fig.savefig(FIGURES / "km_os_eo_vs_ao.png", dpi=200)
+    plt.close(fig)
+
+
 def main() -> None:
     df = load_cohort()
     t1 = table1(df)
     t1.to_csv(RESULTS / "table1.csv")
     followup_adequacy(df)
     km_plot(df)
+    os_plot(df)
     cumulative_incidence(df)
-    print(f"Wrote {RESULTS/'table1.csv'} and 2 KM figures to {FIGURES}/")
+    print(f"Wrote {RESULTS/'table1.csv'} and 3 KM figures to {FIGURES}/")
 
 
 if __name__ == "__main__":

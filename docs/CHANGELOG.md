@@ -34,17 +34,27 @@
   deterministic priority-order fallback (stage, nodes, histology, grade,
   size, age) retained unchanged.
 
+### Implementation completeness
+- src/02_descriptives.py: added `os_plot` — the descriptive overall-survival
+  Kaplan-Meier prespecified in protocol S2 (OS descriptive only; no OS model
+  prespecified). The concordance table previously deferred this to the
+  real-data stage; it is now implemented and runs in both modes. No new
+  analytic choice introduced.
+- Concordance table rows for EPP and sensitivity analyses (2)-(6) now
+  explicitly read *NOT yet executed* rather than implying completion.
+
 ### Post-registration decision log (to be completed at the Stage-02 gate)
 - HORIZON DECISION: [date] — share_of_event_free_with_followup_lt_horizon
   (EO test) = [ ], (AO test) = [ ]; rule fired: [yes/no]; primary horizon
   locked at [60/36] months. EPP (EO train) = [ ]; fallback applied:
   [no / retained-feature list].
 
-# CHANGELOG
-
 Per protocol §13, every deviation or revision is recorded here with date
-and rationale. No SEER data has been requested or accessed as of any entry
-below; all changes precede outcome observation.
+and rationale. Entries through v4.0 preceded access to real SEER data.
+Version 4.1 records the August 19, 2026 outcome-blind Stage 01 schema and
+cohort-construction validation on the authorized SEER export. No follow-up
+distribution, outcome/event distribution, model fitting, predictions, or
+performance metrics were inspected before preregistration.
 
 ## v4.1 — Aug 19, 2026 (real-export schema validation; STILL PRE-REGISTRATION)
 
@@ -74,8 +84,11 @@ Defects found only because real labels were seen (all fixed + tested):
 
 
 
-Still before SEER access; synthetic pipeline tests only. Nothing here was
-tuned on synthetic numerical results.
+## v4.0 — Aug 18, 2026 (preregistration-candidate correction pass)
+
+Entries in this section predate access to real SEER data; synthetic
+pipeline tests only. Nothing here was tuned on synthetic numerical
+results.
 
 1. Follow-up adequacy trigger: denominator corrected to event-free patients
    only (was: share of ALL patients who are event-free AND short); moved to
@@ -112,6 +125,10 @@ tuned on synthetic numerical results.
   frozen models only; requirements updated.
 
 
+
+## v3.0 — Aug 13, 2026 (pre-registration methods audit)
+
+Entries in this section predate access to real SEER data.
 
 ### Scientific / protocol
 - Novelty language softened to "to our knowledge"; two additional adjacent
