@@ -1,5 +1,65 @@
 # Changelog
 
+## v4.1.2 — Sep 14, 2026 (Stage-02 pre-model gate closed; no methodological changes)
+
+Stages 01-02 executed on the real SEER export (Nov 2025 Sub, 2000-2023). No model has been
+fitted or evaluated as of this entry. Cohort flow reproduced the counts recorded at
+preregistration exactly: 216,975 eligible; EO 20,781 train / 9,551 test; AO 130,728 train /
+55,915 test.
+
+### Follow-up adequacy (protocol S5 rule, evaluated at the 60-month horizon)
+
+| group | split | n | event-free | reverse-KM median FU (mo) | share event-free with FU < horizon | horizon-observable share |
+|---|---|---|---|---|---|---|
+| AO | test | 55,915 | 39,931 | 62.0 | 0.475 | 0.661 |
+| EO | test | 9,551 | 6,652 | 63.0 | 0.441 | 0.693 |
+| AO | train | 130,728 | 86,501 | 110.0 | 0.168 | 0.889 |
+| EO | train | 20,781 | 13,176 | 119.0 | 0.084 | 0.947 |
+
+**HORIZON DECISION.** The prespecified trigger (>0.50 of event-free temporal-test patients with
+follow-up shorter than the horizon, in either group) did not fire. Primary horizon RETAINED AT
+60 MONTHS; HORIZON_MONTHS in src/config.py unchanged and now locked. The AO test share (0.475)
+falls near the threshold; the rule was fixed before this quantity was observed and was applied
+as written, and proximity to the threshold was not treated as grounds for reconsideration. Paired
+delta time-dependent AUC remains prespecified at both 36 and 60 months (v4.0 item 3) and is
+unaffected by this decision.
+
+### EPP (protocol S9, EO training window)
+
+7,605 cancer-specific events among 20,781 EO training patients.
+
+The denominator was audited against the frozen implementation rather than inferred.
+src/utils_features.py builds the design matrix via pd.get_dummies(..., drop_first=True), so each
+categorical contributes k-1 parameters. A targeted search of src/utils_features.py and
+src/03_models.py found no polynomial terms, spline transformers, or interaction terms, so no
+further expansion occurs.
+
+Parameter count: 6 numeric (age_dx, tumor_size_mm, nodes_examined, nodes_positive, node_ratio,
+year_dx) + 2 indicators (tumor_size_missing, nodes_not_examined) + 22 from the 10 categoricals at
+k-1 observed levels (sex 1, race_eth 4, site_group 3, histology 2, grade 4, summary_stage 2,
+cea 2, surgery 2, chemo 1, radiation 1) = 30.
+
+**EPP = 7,605 / 30 = 253.5.** Threshold (>=20) satisfied by a wide margin; also satisfied under
+full one-hot encoding (40 parameters, EPP = 190.1) and for any prespecified subset. The S9
+deterministic feature-priority fallback is NOT triggered; the full candidate feature set is
+retained. A naive count over the 18 raw feature names would have given EPP = 423 and was not used.
+
+### Stage-01 data-quality audit (real export)
+
+Unknown shares: summary stage 3.7%, grade 19.2%, CEA 43.3%, surgery 0.3%. Colon NOS/overlapping
+site share 3.1%. The elevated grade-Unknown share is consistent with the 2018+ grade-coding change
+documented at v4.1.
+
+### Notes
+
+- Stage 02 emitted a lifelines warning that tied event times were resolved by random jittering in
+  the Aalen-Johansen estimator. The fitter is instantiated with a fixed seed
+  (AalenJohansenFitter(calculate_variance=False, seed=0)), so the jitter is deterministic and the
+  curves are reproducible. These curves are descriptive; no prespecified inference depends on them.
+- Environment: .venv, Python 3.11.9, per requirements-lock.txt.
+
+**Pre-model gate CLOSED.** Stages 03-07 may now run via `run_models.sh --horizon-locked`.
+
 ## v4.1.1 — Aug 28, 2026 (provenance-correction pass; no methodological changes)
 
 ### Disclosure accuracy
@@ -43,11 +103,11 @@
 - Concordance table rows for EPP and sensitivity analyses (2)-(6) now
   explicitly read *NOT yet executed* rather than implying completion.
 
-### Post-registration decision log (to be completed at the Stage-02 gate)
-- HORIZON DECISION: [date] — share_of_event_free_with_followup_lt_horizon
-  (EO test) = [ ], (AO test) = [ ]; rule fired: [yes/no]; primary horizon
-  locked at [60/36] months. EPP (EO train) = [ ]; fallback applied:
-  [no / retained-feature list].
+### Post-registration decision log (completed at the Stage-02 gate)
+- HORIZON DECISION: 2026-09-14 — share_of_event_free_with_followup_lt_horizon
+  (EO test) = 0.441, (AO test) = 0.475; rule fired: no; primary horizon
+  locked at 60 months. EPP (EO train) = 253.5 (7,605 events / 30 parameters);
+  fallback applied: no. Full detail recorded under v4.1.2 above.
 
 Per protocol §13, every deviation or revision is recorded here with date
 and rationale. Entries through v4.0 preceded access to real SEER data.
