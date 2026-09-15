@@ -4,6 +4,7 @@ Central configuration for the EO-CRC explainable-ML survival study.
 >>> EDIT THIS FILE FIRST when you plug in real SEER data. <<<
 Everything else in src/ reads from here.
 """
+import os
 from pathlib import Path
 
 # ---------------------------------------------------------------- paths
@@ -21,17 +22,70 @@ SYNTH_FILE = DATA_SYNTHETIC / "synthetic_seer_like.csv"
 
 # ------------------------------------------------------------- data mode
 # Outputs are strictly separated so synthetic pipeline tests can never be
-# confused with real-data results. DATA_MODE is decided once, here, from
+# confused with real-data results. BASE_MODE is decided once, here, from
 # the presence of the real export.
-DATA_MODE = "seer" if RAW_FILE.exists() else "synthetic"
+BASE_MODE = "seer" if RAW_FILE.exists() else "synthetic"
+IS_REAL = BASE_MODE == "seer"
+IS_SYNTHETIC = not IS_REAL
 
-RESULTS = ROOT / "results" / DATA_MODE
+# --------------------------------------------------------- sensitivity mode
+# Prespecified sensitivity analyses (protocol S8 items 2-6) are cohort-filter
+# re-runs of the identical pipeline. They are selected by the EOCRC_SENSITIVITY
+# environment variable and routed to a completely separate output namespace so
+# that primary outputs can never be overwritten. With the variable unset, every
+# path below is byte-identical to the pre-sensitivity configuration.
+#
+# The allow-list is CLOSED. Only sensitivities whose operational definition is
+# fully determined by the frozen protocol and frozen code are listed. Items
+# requiring a post-registration operational decision (complete_case,
+# covid_extension, stage1_3_postop) are deliberately absent and will hard-fail.
+ALLOWED_SENSITIVITIES = ("exclude_rectal", "exclude_2019")
+
+_sens = os.environ.get("EOCRC_SENSITIVITY", "").strip()
+if _sens and _sens not in ALLOWED_SENSITIVITIES:
+    raise SystemExit(
+        f"Unsupported EOCRC_SENSITIVITY={_sens!r}.\n"
+        f"Allowed: {', '.join(ALLOWED_SENSITIVITIES)}.\n"
+        "Sensitivities requiring a post-registration operational definition "
+        "(complete_case, covid_extension, stage1_3_postop) are intentionally "
+        "not implemented; define and record them in the CHANGELOG first.")
+SENSITIVITY = _sens or None
+
+# DATA_MODE is the run label used for the cohort's data_mode column and for
+# console banners. It carries the sensitivity suffix so that no output can be
+# mistaken for a primary result.
+DATA_MODE = f"{BASE_MODE}_{SENSITIVITY}" if SENSITIVITY else BASE_MODE
+
+# The primary cohort is always addressable, regardless of run mode: the
+# sensitivity cohort builder reads it as INPUT and must never resolve to the
+# file it is about to write.
+PRIMARY_COHORT_FILE = DATA_PROCESSED / f"cohort_{BASE_MODE}.parquet"
+
+if SENSITIVITY:
+    RESULTS = ROOT / "results" / "sensitivities" / DATA_MODE
+    FIGURES = ROOT / "figures" / "sensitivities" / DATA_MODE
+    COHORT_FILE = (DATA_PROCESSED / "sensitivities"
+                   / f"cohort_{DATA_MODE}.parquet")
+else:
+    RESULTS = ROOT / "results" / BASE_MODE
+    FIGURES = ROOT / "figures" / BASE_MODE
+    COHORT_FILE = PRIMARY_COHORT_FILE
+
 PREDS = RESULTS / "preds"
 MODELS = RESULTS / "models"
-FIGURES = ROOT / "figures" / DATA_MODE
-COHORT_FILE = DATA_PROCESSED / f"cohort_{DATA_MODE}.parquet"
 
-for _p in (DATA_PROCESSED, DATA_SYNTHETIC, RESULTS, PREDS, MODELS, FIGURES):
+# A sensitivity run must never resolve to a primary path. This is a hard
+# invariant, not a convention.
+if SENSITIVITY:
+    _primary_results = ROOT / "results" / BASE_MODE
+    _primary_figures = ROOT / "figures" / BASE_MODE
+    assert RESULTS != _primary_results, "sensitivity RESULTS collides with primary"
+    assert FIGURES != _primary_figures, "sensitivity FIGURES collides with primary"
+    assert COHORT_FILE != PRIMARY_COHORT_FILE, \
+        "sensitivity COHORT_FILE collides with primary"
+
+for _p in (DATA_PROCESSED, DATA_SYNTHETIC, RESULTS, PREDS, MODELS, FIGURES,
+           COHORT_FILE.parent):
     _p.mkdir(parents=True, exist_ok=True)
 
 # ---------------------------------------------------------------- column map

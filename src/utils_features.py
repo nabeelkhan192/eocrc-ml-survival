@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 
 from config import (
-    COHORT_FILE, MODELS, DATA_MODE, NUMERIC_FEATURES, INDICATOR_FEATURES,
+    COHORT_FILE, MODELS, IS_SYNTHETIC, NUMERIC_FEATURES, INDICATOR_FEATURES,
     CATEGORICAL_FEATURES, STAGE_ONLY_FEATURES,
 )
 
@@ -96,7 +96,7 @@ class FeatureBuilder:
 
 def watermark(fig) -> None:
     """Stamp synthetic-mode figures so they can never pass as results."""
-    if DATA_MODE == "synthetic":
+    if IS_SYNTHETIC:
         fig.text(0.5, 0.5, "SYNTHETIC-DATA\nPIPELINE TEST", fontsize=28,
                  color="red", alpha=0.18, ha="center", va="center",
                  rotation=30, zorder=1000)

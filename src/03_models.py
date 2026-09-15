@@ -49,7 +49,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 from config import (
-    PREDS, MODELS, HORIZON_MONTHS, SEED, XGB_DEPTH_GRID, DATA_MODE,
+    PREDS, MODELS, HORIZON_MONTHS, SEED, XGB_DEPTH_GRID, IS_REAL,
 )
 from utils_features import load_cohort, slice_group, FeatureBuilder
 from estimands import horizon_frame
@@ -62,7 +62,7 @@ try:
     HAS_SKSURV = True
 except ImportError:
     HAS_SKSURV = False
-    if DATA_MODE == "seer":
+    if IS_REAL:
         raise SystemExit(
             "scikit-survival is REQUIRED for a real-data run (RSF is a "
             "protocol-specified model). Install it: pip install "
