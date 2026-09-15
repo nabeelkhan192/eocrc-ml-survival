@@ -1,5 +1,28 @@
 # Changelog
 
+## v4.1.3 — Sep 14, 2026 (first real-data model execution completed; no methodological changes)
+
+Stages 03-07 were executed on the real SEER analysis cohort using the preregistered pipeline
+after closure of the Stage-02 pre-model gate.
+
+- Execution command: `bash run_models.sh --horizon-locked`
+- Code state at execution: commit `def6c29` (no modified tracked files in the working tree)
+- Environment: Python 3.11.9 in the project `.venv`
+- Primary horizon: 60 months, locked before model fitting
+- Protocol S9 feature-priority fallback: not triggered
+- Stages completed: model fitting, temporal evaluation, frozen AO-to-EO transport evaluation,
+  SHAP analysis, decision-curve analysis, and prespecified recalibration
+- Aggregate outputs written to `results/seer/`
+- Figures written to `figures/seer/`
+- The pipeline completed successfully without changing the prespecified horizon, predictor set,
+  materiality thresholds, model definitions, transport rules, or recalibration procedures.
+- No analysis was rerun or modified in response to the observed model-performance results as of
+  this entry. The contents of `results/seer/` and `figures/seer/` are first-run outputs and are
+  retained unmodified.
+
+This entry records execution provenance only. Scientific interpretation of the results is handled
+separately and does not modify the preregistered analysis plan.
+
 ## v4.1.2 — Sep 14, 2026 (Stage-02 pre-model gate closed; no methodological changes)
 
 Stages 01-02 executed on the real SEER export (Nov 2025 Sub, 2000-2023). No model has been
