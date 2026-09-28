@@ -93,7 +93,11 @@ def hash_outputs(targets: list[Path]) -> dict[str, str]:
         files = [t] if t.is_file() else sorted(p for p in t.rglob("*")
                                               if p.is_file()) if t.exists() else []
         for f in files:
-            out[f.relative_to(ROOT).as_posix()] = _sha256(f)
+            try:
+                key = f.relative_to(ROOT).as_posix()
+            except ValueError:
+                key = f.as_posix()
+            out[key] = _sha256(f)
     return out
 
 
