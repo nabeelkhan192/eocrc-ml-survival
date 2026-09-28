@@ -1,5 +1,88 @@
 # Changelog
 
+## v4.1.4 — Sep 28, 2026 (execution-safety layer for prespecified sensitivity analyses, and two sensitivity-execution rules; recorded before any sensitivity run; no analytic change)
+
+Records commit `a22ad8d` (Sep 14, 2026) and two sensitivity-execution rules. The rules were
+adopted on methodological grounds in the Sep 15, 2026 working session but were not committed to
+the repository at that time; this entry is their first recorded form. Both are recorded before
+any sensitivity analysis has been executed on real data. Protocol S8 items (2)-(6) are prespecified cohort-filter re-runs of the
+identical 01->07 pipeline. No mechanism existed to run them without overwriting the preserved
+first-run primary outputs, because `config.DATA_MODE` routed every output path and had no notion
+of a sensitivity run. **No analytic choice, threshold, hypothesis, model, predictor definition,
+horizon, or interpretation is changed.**
+
+### Isolation mechanism (commit `a22ad8d`)
+- `src/config.py`: `BASE_MODE` (unchanged logic: real export present -> "seer") is now separated
+  from `DATA_MODE`, which carries an optional sensitivity suffix taken from the
+  `EOCRC_SENSITIVITY` environment variable. With the variable unset, every path
+  (`RESULTS`, `FIGURES`, `PREDS`, `MODELS`, `COHORT_FILE`) is identical to the previous
+  configuration; primary reproducibility is unaffected.
+- Sensitivity runs are routed to `results/sensitivities/<mode>/`,
+  `figures/sensitivities/<mode>/`, and
+  `data/processed/sensitivities/cohort_<mode>.parquet`.
+- `PRIMARY_COHORT_FILE` added so the primary cohort stays addressable as INPUT regardless of run
+  mode.
+- Assertions in `config.py` fail the run if any sensitivity path resolves to a primary path.
+- `ALLOWED_SENSITIVITIES` is a CLOSED allow-list containing only `exclude_rectal` and
+  `exclude_2019`. Any other value — including `complete_case`, `covid_extension`,
+  `stage1_3_postop` — raises `SystemExit` at import time.
+
+### Guard correction (behavioural, and the reason this entry is not purely cosmetic)
+- `src/03_models.py`: the RSF hard-requirement guard previously read
+  `if DATA_MODE == "seer":`. Under a sensitivity label this would have evaluated False and
+  silently made RSF optional on real data. Changed to `if IS_REAL:`, which is derived from
+  `BASE_MODE` and is unaffected by the label. **Primary-run behaviour is unchanged**; this
+  prevents a latent divergence in sensitivity runs.
+- `src/utils_features.py`: the synthetic-figure watermark guard changed from
+  `DATA_MODE == "synthetic"` to `IS_SYNTHETIC` for the same reason. Primary behaviour unchanged.
+
+### New: sensitivity cohort builder
+- `src/08_make_sensitivity_cohort.py` reads the frozen primary cohort parquet, applies one named
+  row filter, and writes an isolated sensitivity cohort. It does NOT re-run
+  `01_build_cohort.py`: cohort construction is frozen and was executed once for the primary
+  analysis. Refuses to run if the primary cohort is absent, if the output path resolves to the
+  primary cohort, or if the output already exists (without `--force`).
+- Filters, derived solely from frozen protocol and frozen code:
+  - `exclude_rectal`: `site_group != "Rectum"`. `map_site()` defines Rectum as C19.9
+    rectosigmoid + C20.9 rectum; protocol section 4 independently states "rectum C19.9/C20.9".
+    Code and protocol agree; no redefinition applied.
+  - `exclude_2019`: `year_dx != 2019` (protocol S8 item 4). Training window unchanged at
+    2010-2016; temporal test window becomes 2017-2018.
+
+### Rule 1 — Horizon locked for all sensitivity analyses
+The primary horizon remains LOCKED at 60 months (v4.1.2) for all sensitivity analyses.
+`02_descriptives.py` recomputes protocol S5 follow-up adequacy on every run and may print the
+36-month warning for a smaller sensitivity cohort; that warning is NOT to be acted on for
+sensitivity analyses. The S5 adequacy rule is a one-time gate decision taken on the primary
+cohort; re-deriving the horizon per sensitivity would make the sensitivities incomparable with
+the primary result.
+
+### Rule 2 — Protocol S9 fallback does not fire inside a sensitivity analysis
+The protocol evaluates events-per-parameter "at the Stage-02 gate" and is silent on
+sensitivities. Rule recorded here: the S9 deterministic feature-priority fallback is NOT
+re-evaluated and does NOT fire inside a sensitivity analysis. Every sensitivity uses the
+primary predictor set unchanged, because a sensitivity that altered its own predictor set would
+no longer be a cohort-filter re-run of the identical pipeline. EO-training EPP for each
+sensitivity is reported descriptively. (For `exclude_rectal` and `exclude_2019` the margin is
+large — primary EPP 253.5 — so this is a matter of record, not of risk.)
+
+### Tests
+- `tests/test_sensitivity_isolation.py` (21 tests) proves: unset variable reproduces primary
+  paths exactly; sensitivity paths never equal or nest inside primary paths; each filter removes
+  exactly the rows its definition names and mutates nothing else; the filter table and the
+  allow-list cannot drift apart; unsupported and deferred names hard-fail.
+
+### Not implemented, by design
+`complete_case`, `covid_extension`, and `stage1_3_postop` remain unimplemented because each
+requires an operational definition the frozen protocol does not fully determine (respectively:
+the row-level completeness rule; the extension test window plus a new SEER*Stat extraction, the
+current export containing only diagnosis years 2010-2019; and the absence of an AJCC stage-group
+variable, Combined Summary Stage being an approximation of non-metastatic disease rather than a
+reproduction of AJCC I-III). Definitions must be derived and recorded here before any of the
+three is added to the allow-list.
+
+No sensitivity analysis has been executed on real SEER data as of this entry.
+
 ## v4.1.3 — Sep 14, 2026 (first real-data model execution completed; no methodological changes)
 
 Stages 03-07 were executed on the real SEER analysis cohort using the preregistered pipeline
