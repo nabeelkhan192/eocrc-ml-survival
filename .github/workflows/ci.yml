@@ -1,0 +1,33 @@
+# Runs the test suite on every push to main and on pull requests.
+# Unit/synthetic tests only: CI never has real SEER data, never sets
+# EOCRC_SENSITIVITY, and never runs the analysis pipeline.
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0              # history + tags, for the frozen-tag check
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+          cache: pip
+          cache-dependency-path: requirements-lock.txt
+      - name: Install pinned environment
+        run: pip install -r requirements-lock.txt
+      - name: Run tests (all must pass)
+        run: python -m pytest tests/ -q
+      - name: Frozen-state checks (tag -> a2c4869, protocol unchanged, horizon 60)
+        run: python project.py status
