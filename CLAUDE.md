@@ -29,7 +29,8 @@ provenance chain, not its speed. Read these rules before doing anything.
 
 - Read a file before editing it. Never patch from a fragment or from memory.
 - Show the full diff before suggesting a commit.
-- Run `python -m pytest tests/ -q` after any change to `src/` or `tests/`. 43 tests must pass.
+- Run `python -m pytest tests/ -q` after any change to `src/` or `tests/`. All tests must pass
+  (`python project.py test` does this and logs it).
 - Say plainly when you are unsure, when you lack information, or when a request would cross one
   of the rules above. Stopping is always the right answer over guessing.
 - Prefer the smallest change that works. This codebase is frozen; every diff line is a liability.
@@ -52,9 +53,9 @@ Primary analysis complete and interpreted. Commit chain: `a2c4869` (frozen prere
 provenance) → `0377af2`/`151cedd` (primary-results interpretation) → `a22ad8d` (sensitivity
 execution-safety layer).
 
-Outstanding: a v4.1.4 CHANGELOG entry for `a22ad8d`; a recorded decision that the horizon stays
-locked at 60 months for all sensitivity analyses; a rule for whether the protocol S9 fallback may
-fire inside a sensitivity. No sensitivity analysis has been run on real data.
+CHANGELOG v4.1.4 records the sensitivity layer, the horizon lock at 60 months for all
+sensitivities, and the rule that the S9 fallback does not fire inside a sensitivity. Sensitivity
+runs go through `python project.py sensitivity <mode>`, which enforces these guards.
 
 ## Good tasks for you
 

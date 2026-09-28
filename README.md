@@ -73,10 +73,11 @@ advice; not for clinical decision-making. See `app/app.py` header.
 ```bash
 python -m pytest tests -q
 ```
-23 deterministic tests on toy data: train-only preprocessing, frozen
+Deterministic tests on toy data: train-only preprocessing, frozen
 AO->EO transport, paired-bootstrap alignment, adequacy denominator,
 horizon boundary, grade/site/surgery mapping, XGB full-cohort refit,
-paired delta time-dependent AUC.
+paired delta time-dependent AUC, sensitivity-run isolation, and the
+automation guards. CI runs them on every push.
 
 ## Using real SEER data
 
@@ -106,6 +107,28 @@ Real-data execution is gated to match the prespecified workflow:
 Synthetic mode (no real export present) is unaffected and runs the full
 pipeline end-to-end via `bash run_all.sh`.
 
+## Automation (operational only)
+
+`project.py` is a thin task runner: it checks guards, runs the existing
+scripts exactly as a manual run would, and writes a timestamped log and
+JSON record to `logs/` (git-ignored). It contains no scientific code.
+
+| Command | Manual equivalent |
+|---|---|
+| `python project.py status` | `git status`, tag/protocol/horizon checks, primary-output hash check |
+| `python project.py test` | `python -m pytest tests/ -q` |
+| `python project.py baseline --archive <folder>` | compare `results/seer/` and `figures/seer/` file-by-file with the first-run archive, then record their hashes (once) |
+| `python project.py sensitivity exclude_rectal` | `EOCRC_SENSITIVITY=exclude_rectal` then `python src/08_make_sensitivity_cohort.py`, `python src/02_descriptives.py`, and the stages in `run_models.sh` |
+| `python project.py sensitivity exclude_2019` | as above with `exclude_2019` |
+
+`sensitivity` refuses to run unless the working tree is clean, the frozen
+tag and registered protocol are intact, the horizon is 60 months,
+CHANGELOG v4.1.4 is recorded, and the tests pass; primary outputs are
+hashed before and after every run and, in SEER mode, checked against the
+baseline recorded by `baseline`. `--dry-run` shows the commands without
+executing. Enable the pre-commit safety hook once per clone with
+`git config core.hooksPath .githooks`.
+
 ## Repository map
 
 ```
@@ -119,6 +142,7 @@ results/  generated tables, per mode: results/synthetic/ vs results/seer/
           (git-ignored)
 figures/  generated figures, per mode; every synthetic-mode figure is
           watermarked "SYNTHETIC-DATA PIPELINE TEST" (git-ignored)
+tools/    automation guards and run logging for project.py (no scientific code)
 ```
 
 ## Methods snapshot
