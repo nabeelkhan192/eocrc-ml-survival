@@ -1,0 +1,11 @@
+#!/bin/sh
+# EOCRC-SEER safety check. Enable once per clone:  git config core.hooksPath .githooks
+ROOT="$(git rev-parse --show-toplevel)"
+# Use the first interpreter that actually runs (skips the Windows Store stub).
+for PY in python py python3; do
+  if command -v "$PY" >/dev/null 2>&1 && "$PY" -c "import sys" >/dev/null 2>&1; then
+    exec "$PY" "$ROOT/tools/precommit_check.py"
+  fi
+done
+echo "pre-commit: no working Python found; activate .venv and commit again." >&2
+exit 1
