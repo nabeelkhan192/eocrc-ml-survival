@@ -189,3 +189,30 @@ def test_baseline_accepts_flat_archive(tmp_path, monkeypatch):
     (root / "figures" / "seer" / "km.png").write_text("km")
     ok, _ = guards.create_baseline(arch, "seer")
     assert ok and guards.verify_primary_manifest("seer")[0]
+
+
+# ------------------------------------------------------------ summarize
+from tools import summarize  # noqa: E402
+
+
+def test_summarize_never_reads_per_patient_or_table1(tmp_path):
+    for bad in ("preds/eo.csv", "models/x.csv", "table1.csv", "cohort.parquet"):
+        p = tmp_path / bad
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("a\n1\n")
+        with pytest.raises(PermissionError):
+            summarize._render(p)
+
+
+def test_small_cells_flagged_only_in_count_columns():
+    rows = [{"step": "x", "n": "12"}, {"step": "y", "n": "500"},
+            {"group": "EO", "n_event_free": "3", "brier": "0.15", "cindex": "5"}]
+    hits = summarize.small_cells(rows)
+    assert len(hits) == 2
+    assert any("'n' = 12" in h for h in hits)
+    assert any("n_event_free" in h for h in hits)
+
+
+def test_summarize_output_never_protected(tmp_path):
+    with pytest.raises(guards.ProtectedPathError):
+        summarize.build(ROOT / "results" / "seer" / "review.txt")

@@ -6,6 +6,8 @@
     python project.py baseline --archive "<first-run archive folder>"
     python project.py sensitivity exclude_rectal [--dry-run] [--rerun]
     python project.py sensitivity exclude_2019   [--dry-run] [--rerun]
+    python project.py summarize [--out FILE]
+    python project.py sensitivity-all [--out FILE]
 
 This file computes nothing scientific. It checks guards, shells out to the
 existing pipeline scripts exactly as a manual run would, and writes a
@@ -17,7 +19,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from tools import guards, provenance
+from tools import guards, provenance, summarize
 from tools.runlog import RunLog
 
 ROOT = Path(__file__).resolve().parent
@@ -177,6 +179,59 @@ def cmd_sensitivity(args, argv) -> int:
     return log.finish(0, f"SENSITIVITY {name} COMPLETE. Primary outputs intact.")
 
 
+# ================================================================== summarize
+DEFAULT_REVIEW_FILE = ROOT / "logs" / "sensitivity_results_for_review.txt"
+
+
+def cmd_summarize(args, argv) -> int:
+    log = RunLog("summarize", argv)
+    out = Path(args.out) if args.out else DEFAULT_REVIEW_FILE
+    written, warnings = summarize.build(out)
+    log.record["output_paths"].append(str(out))
+    log.echo(f"\nsections included: {', '.join(written) if written else 'none'}")
+    for w in warnings:
+        log.echo(f"  small cell: {w}")
+    if not written:
+        return log.finish(1, "NOTHING TO SUMMARIZE: no primary or sensitivity outputs found.")
+    msg = f"REVIEW FILE WRITTEN: {out}"
+    if warnings:
+        msg += (f"\n{len(warnings)} count cell(s) below {summarize.SMALL_CELL} are "
+                "flagged at the top of the file. Check them before sharing.")
+    return log.finish(0, msg)
+
+
+# ================================================================== sensitivity-all
+def cmd_sensitivity_all(args, argv) -> int:
+    """Run each allowed sensitivity that has not been run, then summarize.
+
+    Never reruns a sensitivity that already has outputs (each is executed once);
+    each run goes through the full guarded `sensitivity` command.
+    """
+    mode = guards.base_mode()
+    results = {}
+    for name in guards.ALLOWED_SENSITIVITIES:
+        folder = ROOT / "results" / "sensitivities" / f"{mode}_{name}"
+        if folder.exists() and any(folder.rglob("*.csv")):
+            print(f"\n=== {name}: already run - skipped (never rerun automatically)")
+            results[name] = "skipped (already run)"
+            continue
+        print(f"\n=== {name}: running")
+        sub = argparse.Namespace(mode=name, dry_run=False, rerun=False)
+        rc = cmd_sensitivity(sub, ["project.py", "sensitivity", name])
+        results[name] = "complete" if rc == 0 else f"FAILED (exit {rc})"
+        if rc != 0:
+            print(f"\nStopped: {name} did not complete. Nothing further was run.")
+            break
+    rc = 0 if all(not v.startswith("FAILED") for v in results.values()) else 1
+    if rc == 0:
+        rc = cmd_summarize(argparse.Namespace(out=args.out),
+                           ["project.py", "summarize"] + (["--out", args.out] if args.out else []))
+    print("\n=== SUMMARY")
+    for k, v in results.items():
+        print(f"  {k:16s} {v}")
+    return rc
+
+
 # ================================================================== main
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):   # never crash on a console codepage
@@ -201,9 +256,16 @@ def main(argv: list[str] | None = None) -> int:
                    help="run all checks and print the commands, execute nothing")
     s.add_argument("--rerun", action="store_true",
                    help="deliberately overwrite a previous run of THIS sensitivity")
+    sm = sub.add_parser("summarize", help="collect aggregate result tables "
+                        "into one review file (no per-patient data)")
+    sm.add_argument("--out", help="output file (default logs/sensitivity_results_for_review.txt)")
+    sa = sub.add_parser("sensitivity-all", help="run every allowed sensitivity "
+                        "not yet run, then summarize")
+    sa.add_argument("--out", help="review file path (as for summarize)")
     args = ap.parse_args(argv)
     handler = {"status": cmd_status, "test": cmd_test, "baseline": cmd_baseline,
-               "sensitivity": cmd_sensitivity}[args.command]
+               "sensitivity": cmd_sensitivity, "summarize": cmd_summarize,
+               "sensitivity-all": cmd_sensitivity_all}[args.command]
     try:
         return handler(args, ["project.py", *argv])
     except guards.ProtectedPathError as exc:

@@ -120,6 +120,13 @@ JSON record to `logs/` (git-ignored). It contains no scientific code.
 | `python project.py baseline --archive <folder>` | compare `results/seer/` and `figures/seer/` file-by-file with the first-run archive, then record their hashes (once) |
 | `python project.py sensitivity exclude_rectal` | `EOCRC_SENSITIVITY=exclude_rectal` then `python src/08_make_sensitivity_cohort.py`, `python src/02_descriptives.py`, and the stages in `run_models.sh` |
 | `python project.py sensitivity exclude_2019` | as above with `exclude_2019` |
+| `python project.py sensitivity-all` | each sensitivity above that has not been run yet (finished ones are skipped, never rerun), then `summarize` |
+| `python project.py summarize` | copy the aggregate result tables (never `preds/`, `models/` or `table1.csv`) into `logs/sensitivity_results_for_review.txt`, flagging count cells below 16 |
+
+On Windows, double-clicking `run_sensitivities.bat` runs `sensitivity-all` in the
+project `.venv` and opens the review file when it finishes. CI runs the tests on
+every push, and every Monday also runs the full pipeline and both sensitivities
+on synthetic data (never real data) to catch environment drift.
 
 `sensitivity` refuses to run unless the working tree is clean, the frozen
 tag and registered protocol are intact, the horizon is 60 months,

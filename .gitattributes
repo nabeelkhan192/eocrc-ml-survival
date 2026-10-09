@@ -1,2 +1,3 @@
 # Git hooks must keep LF endings or sh cannot run them on Windows checkouts
 .githooks/* text eol=lf
+*.bat text eol=crlf
