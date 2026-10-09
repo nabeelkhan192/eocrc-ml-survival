@@ -1,5 +1,42 @@
 # Changelog
 
+## v4.1.5 — Oct 9, 2026 (prespecified sensitivity analyses (3) and (4) executed on real data; no methodological changes)
+
+Protocol S8 items (3) exclude rectal primaries and (4) exclude 2019 diagnoses were executed on the real
+SEER analysis cohort, each as a cohort-filter re-run of the identical pipeline (08 -> 02 -> 03-07), under
+the rules recorded in v4.1.4 before any sensitivity result existed.
+
+- Execution command: `python project.py sensitivity-all`, which ran `python project.py sensitivity <mode>`
+  for each mode (via `run_sensitivities.bat`). Each run had `EOCRC_SENSITIVITY=<mode>` set.
+- Code state at execution: commit `8d438d6`, working tree clean. Commits after v4.1.4 (`6381cce`)
+  changed only the automation layer (`project.py`, `tools/`, tests, CI); nothing in `src/`.
+- Environment: Python 3.11.9 in the project `.venv`; test suite 88 passed, 1 skipped before each run.
+- Run times (UTC): `exclude_rectal` 2026-10-09 18:46; `exclude_2019` 2026-10-09 18:55. Each run's log and
+  JSON record are in `logs/` (local, not committed).
+- Primary horizon: 60 months, locked (v4.1.2, v4.1.4 Rule 1). The follow-up-adequacy table printed by
+  `02_descriptives.py` was not acted on. Protocol S9 fallback: not re-evaluated inside a sensitivity
+  (v4.1.4 Rule 2); each sensitivity used the primary predictor set unchanged.
+- Primary outputs: 43 files in `results/seer/` and `figures/seer/` hashed before and after each run and
+  checked against the baseline recorded from the external first-run archive; no file changed.
+- Not executed, by design (unchanged from v4.1.4): `complete_case`, `covid_extension`, `stage1_3_postop`.
+
+Cohort flow (counts only):
+
+| Sensitivity | Filter | Eligible | Removed | AO train / test | EO train / test |
+|---|---|---|---|---|---|
+| `exclude_rectal` | `site_group != "Rectum"` | 148,958 | 68,017 | 91,818 / 38,808 | 12,586 / 5,746 |
+| `exclude_2019` | `year_dx != 2019` | 194,684 | 22,291 | 130,728 / 36,933 | 20,781 / 6,242 |
+
+Provenance note: for `exclude_rectal`, an earlier invocation on 2026-09-28 (after v4.1.4 was committed)
+built the filtered cohort (stage 08) and stopped; no descriptives and no model had been run. The complete
+run on 2026-10-09 was executed with `--force`, which replaced that partial output. The cohort counts
+above are identical to those of the partial run. For `exclude_2019`, the output folder existed from
+isolation tests on 2026-09-14 but held no result tables; the run on 2026-10-09 was its first.
+
+No analysis was rerun or modified in response to the observed results as of this entry. Scientific
+interpretation of the sensitivity results is handled separately and does not modify the preregistered
+analysis plan. Per-patient predictions and fitted models remain on the analysis machine only.
+
 ## v4.1.4 — Sep 28, 2026 (execution-safety layer for prespecified sensitivity analyses, and two sensitivity-execution rules; recorded before any sensitivity run; no analytic change)
 
 Records commit `a22ad8d` (Sep 14, 2026) and two sensitivity-execution rules. The rules were
