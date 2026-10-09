@@ -230,3 +230,20 @@ def test_summarize_treats_empty_sensitivity_folder_as_not_run(tmp_path, monkeypa
     text = (tmp_path / "review.txt").read_text()
     assert written == ["SENSITIVITY: exclude_rectal"]
     assert text.count("not run yet") == 2          # exclude_2019 and primary (both empty)
+
+
+# ------------------------------------------------------------ sensitivity state
+def test_sensitivity_state_none_partial_complete(tmp_path):
+    import project
+    d = tmp_path / "seer_exclude_rectal"
+    assert project.sensitivity_state(d) == "none"
+    (d / "preds").mkdir(parents=True)
+    assert project.sensitivity_state(d) == "none"          # empty dirs only
+    (d / "sensitivity_cohort_flow.csv").write_text("step,n\n")
+    assert project.sensitivity_state(d) == "partial"       # builder ran, models did not
+    (d / "followup_adequacy.csv").write_text("g\n")
+    assert project.sensitivity_state(d) == "partial"
+    (d / "transportability_paired.csv").write_text("m\n")
+    assert project.sensitivity_state(d) == "partial"       # stage 07 still missing
+    (d / "recalibration.csv").write_text("m\n")
+    assert project.sensitivity_state(d) == "complete"

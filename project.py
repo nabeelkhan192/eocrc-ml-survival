@@ -201,6 +201,20 @@ def cmd_summarize(args, argv) -> int:
 
 
 # ================================================================== sensitivity-all
+# A sensitivity counts as completed only when the evaluation (stage 04) and
+# recalibration (stage 07) tables both exist; an earlier run that stopped after
+# the cohort filter or descriptives is "partial" and is completed, not skipped.
+COMPLETE_MARKERS = ("transportability_paired.csv", "recalibration.csv")
+
+
+def sensitivity_state(folder: Path) -> str:
+    if not folder.exists() or not any(folder.rglob("*.csv")):
+        return "none"
+    if all((folder / m).exists() for m in COMPLETE_MARKERS):
+        return "complete"
+    return "partial"
+
+
 def cmd_sensitivity_all(args, argv) -> int:
     """Run each allowed sensitivity that has not been run, then summarize.
 
@@ -211,12 +225,18 @@ def cmd_sensitivity_all(args, argv) -> int:
     results = {}
     for name in guards.ALLOWED_SENSITIVITIES:
         folder = ROOT / "results" / "sensitivities" / f"{mode}_{name}"
-        if folder.exists() and any(folder.rglob("*.csv")):
-            print(f"\n=== {name}: already run - skipped (never rerun automatically)")
-            results[name] = "skipped (already run)"
+        state = sensitivity_state(folder)
+        if state == "complete":
+            print(f"\n=== {name}: already completed - skipped (never rerun automatically)")
+            results[name] = "skipped (already completed)"
             continue
-        print(f"\n=== {name}: running")
-        sub = argparse.Namespace(mode=name, dry_run=False, rerun=False)
+        if state == "partial":
+            print(f"\n=== {name}: an earlier run stopped before the models finished "
+                  "(cohort/descriptives only). Completing it; this overwrites only "
+                  "this sensitivity's partial outputs.")
+        else:
+            print(f"\n=== {name}: running")
+        sub = argparse.Namespace(mode=name, dry_run=False, rerun=(state == "partial"))
         rc = cmd_sensitivity(sub, ["project.py", "sensitivity", name])
         results[name] = "complete" if rc == 0 else f"FAILED (exit {rc})"
         if rc != 0:
