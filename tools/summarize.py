@@ -86,8 +86,8 @@ def build(out_path: Path, mode: str | None = None) -> tuple[list[str], list[str]
     written, warnings = [], []
     for title, folder in sections:
         lines += ["=" * 78, title, "=" * 78]
-        if not folder.exists():
-            lines += ["(not run yet)", ""]
+        if not folder.exists() or not any((folder / n).exists() for n in AGGREGATE_TABLES):
+            lines += ["(not run yet - no result tables in this folder)", ""]
             continue
         written.append(title)
         for name in AGGREGATE_TABLES:

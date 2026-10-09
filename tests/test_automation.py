@@ -216,3 +216,17 @@ def test_small_cells_flagged_only_in_count_columns():
 def test_summarize_output_never_protected(tmp_path):
     with pytest.raises(guards.ProtectedPathError):
         summarize.build(ROOT / "results" / "seer" / "review.txt")
+
+
+def test_summarize_treats_empty_sensitivity_folder_as_not_run(tmp_path, monkeypatch):
+    root = tmp_path / "repo"
+    (root / "results" / "sensitivities" / "seer_exclude_2019" / "preds").mkdir(parents=True)
+    (root / "results" / "sensitivities" / "seer_exclude_rectal").mkdir(parents=True)
+    (root / "results" / "sensitivities" / "seer_exclude_rectal" / "recalibration.csv").write_text("family,model\nh,x\n")
+    (root / "results" / "seer").mkdir(parents=True)
+    monkeypatch.setattr(summarize, "ROOT", root)
+    monkeypatch.setattr(guards, "ROOT", root)
+    written, _ = summarize.build(tmp_path / "review.txt", mode="seer")
+    text = (tmp_path / "review.txt").read_text()
+    assert written == ["SENSITIVITY: exclude_rectal"]
+    assert text.count("not run yet") == 2          # exclude_2019 and primary (both empty)
