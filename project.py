@@ -102,8 +102,10 @@ def cmd_sensitivity(args, argv) -> int:
     log.echo("\n--- pre-run checks")
     tree_clean = log.record["provenance"]["working_tree_clean"]
     ok = True
+    changes = log.record["provenance"]["working_tree_changes"] or []
     ok &= log.check("working tree clean", bool(tree_clean),
-                    "" if tree_clean else "commit or stash changes first")
+                    "" if tree_clean else "uncommitted changes: " + " | ".join(
+                        c.strip() for c in changes[:10]))
     ok &= log.check("frozen tag", *guards.check_frozen_tag())
     ok &= log.check("registered protocol unchanged", *guards.check_protocol_unchanged())
     ok &= log.check("horizon locked", *guards.check_horizon_locked())
