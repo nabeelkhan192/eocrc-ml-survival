@@ -4,10 +4,10 @@
 average-onset patients transport to early-onset patients — and can
 recalibration repair them?**
 
-Principal investigator: **Nabeel Ahmad Khan** (first & corresponding author)
-Status: final preregistration candidate (see
-`docs/protocol_OSF_preregistration.md`); OSF registration pending — the
-registration DOI, date, and URL will be added here upon registration. Preprint: *forthcoming (medRxiv)*.
+Status: preregistered — OSF registration 7g538 (https://osf.io/7g538/,
+registered Aug 29, 2026, before any outcome data were analyzed); the frozen
+protocol is archived in the immutable registration and at tag
+`v4.1.1-osf-final`. Preprint: *forthcoming (medRxiv)*.
 
 ---
 
