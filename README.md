@@ -7,7 +7,7 @@ recalibration repair them?**
 Status: preregistered — OSF registration 7g538 (https://osf.io/7g538/,
 registered Aug 29, 2026, before any outcome data were analyzed); the frozen
 protocol is archived in the immutable registration and at tag
-`v4.1.1-osf-final`. Preprint: *forthcoming (medRxiv)*.
+`v4.1.1-osf-final`. Preprint: Khan NA (2026), Zenodo. https://doi.org/10.5281/zenodo.23684158.
 
 ---
 
