@@ -27,7 +27,7 @@ That frozen-model **age-group transportability** question is this study's
 primary objective; interpretable EO-CRC model development and an EO-vs-AO
 SHAP contrast are secondary. Full rationale, hypotheses, and analysis plan are
 prespecified in `docs/protocol_OSF_preregistration.md` (OSF registration
-pending).
+7g538, Aug 29, 2026).
 
 **Pre-registration real-data access disclosure.** Real SEER data were
 accessed before preregistration only for outcome-blind schema and
